@@ -3,26 +3,34 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 class GDriveService {
     private $service;
-    // TODO: Ganti string di bawah ini dengan Folder ID Google Drive milikmu
-    private $folderId = 'PASTE_FOLDER_ID_DISINI'; 
+    
+    // 1. Pastikan Folder ID benar
+    private $folderId = 'MASUKAN_FOLDER_ID_GOOGLE_DRIVE_ANDA_DISINI'; 
 
     public function __construct() {
         $client = new Google\Client();
         
-        // Mengarah ke file JSON service account yang sudah diunduh sebelumnya
-        $client->setAuthConfig(__DIR__ . '/gdrive_auth.json');
+        // 2. Pastikan Client ID dan Secret benar tanpa spasi lebih
+        $client->setClientId('MASUKAN_CLIENT_ID_GOOGLE_ANDA_DISINI');
+        $client->setClientSecret('MASUKAN_CLIENT_SECRET_GOOGLE_ANDA_DISINI');
+        
         $client->addScope(Google\Service\Drive::DRIVE_FILE);
+        $client->setAccessType('offline');
+        
+        // 3. Tukar Refresh Token
+        $token = $client->fetchAccessTokenWithRefreshToken('MASUKAN_REFRESH_TOKEN_GOOGLE_ANDA_DISINI');
+        
+        // 4. Debugging: Jika proses tukar token gagal, hentikan dan tampilkan alasannya
+        if (isset($token['error'])) {
+            die("TOKEN ERROR: " . $token['error_description'] . " (" . $token['error'] . ")");
+        }
+        
+        // 5. INI KUNCI UTAMANYA: Pasang token secara eksplisit ke dalam sistem
+        $client->setAccessToken($token);
         
         $this->service = new Google\Service\Drive($client);
     }
 
-    /**
-     * Fungsi untuk mengunggah file ke folder spesifik di Google Drive
-     * * @param string $filePath Jalur file sementara (tmp_name)
-     * @param string $fileName Nama asli file atau nama acak baru
-     * @param string $mimeType Tipe file (image/jpeg, image/png, dll)
-     * @return array|false Mengembalikan array berisi ID dan Link jika sukses, false jika gagal
-     */
     public function uploadFile($filePath, $fileName, $mimeType) {
         $fileMetadata = new Google\Service\Drive\DriveFile([
             'name' => $fileName,
@@ -43,7 +51,7 @@ class GDriveService {
                 'link' => $file->webViewLink
             ];
         } catch (Exception $e) {
-            // Bisa menambahkan log error di sini jika diperlukan untuk debugging
+            die("UPLOAD ERROR: " . $e->getMessage());
             return false;
         }
     }

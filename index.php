@@ -2,8 +2,14 @@
 session_start();
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/controllers/AuthController.php';
+require_once __DIR__ . '/controllers/WorkoutController.php';
+require_once __DIR__ . '/controllers/DashboardController.php';
+require_once __DIR__ . '/controllers/CalendarController.php';
 
 $auth = new AuthController($pdo);
+$workout = new WorkoutController($pdo);
+$dashboard = new DashboardController($pdo);
+$calendar = new CalendarController($pdo);
 $base_path = '/fittrack-web'; // Sesuaikan dengan nama folder di Laragon
 $route = str_replace($base_path, '', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
@@ -11,6 +17,7 @@ $route = str_replace($base_path, '', parse_url($_SERVER['REQUEST_URI'], PHP_URL_
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'register') $auth->register($_POST);
     if ($_POST['action'] === 'login') $auth->login($_POST);
+    if ($_POST['action'] === 'submit_absen') $workout->store($_POST, $_FILES);
 }
 
 // Tangani rute halaman (GET)
@@ -30,9 +37,19 @@ switch ($route) {
         break;
     case '/dashboard':
         if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
-        // Kita buat file kosong sementara agar tidak error saat berhasil login
-        if(!file_exists(__DIR__ . '/views/dashboard.php')) { file_put_contents(__DIR__ . '/views/dashboard.php', '<h1>Ini Dashboard</h1><a href="'.$base_path.'/logout">Logout</a>'); }
-        require __DIR__ . '/views/dashboard.php';
+        $dashboard->index();
+        break;
+    case '/absen':
+        if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
+        require __DIR__ . '/views/form_absen.php';
+        break;
+    case '/kalender':
+        if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
+        $calendar->index();
+        break;
+    case '/api/workout-days':
+        if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
+        $calendar->getWorkoutDays();
         break;
     default:
         http_response_code(404);

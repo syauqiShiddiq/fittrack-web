@@ -1,2 +1,3 @@
 # Mengabaikan file kredensial
 config/gdrive_auth.json
+config/gdrive_service.php
