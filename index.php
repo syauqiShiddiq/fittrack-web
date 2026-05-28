@@ -5,11 +5,13 @@ require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/WorkoutController.php';
 require_once __DIR__ . '/controllers/DashboardController.php';
 require_once __DIR__ . '/controllers/CalendarController.php';
+require_once __DIR__ . '/controllers/ProfileController.php';
 
 $auth = new AuthController($pdo);
 $workout = new WorkoutController($pdo);
 $dashboard = new DashboardController($pdo);
 $calendar = new CalendarController($pdo);
+$profile = new ProfileController($pdo);
 $base_path = '/fittrack-web'; // Sesuaikan dengan nama folder di Laragon
 $route = str_replace($base_path, '', parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
@@ -50,6 +52,18 @@ switch ($route) {
     case '/api/workout-days':
         if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
         $calendar->getWorkoutDays();
+        break;
+    case '/api/workout-details':
+        if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
+        $calendar->getWorkoutDetails();
+        break;
+    case '/profil':
+        if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
+        $profile->index();
+        break;
+    case '/profil/update':
+        if(!isset($_SESSION['user_id'])) { header("Location: $base_path/login"); exit; }
+        $profile->update();
         break;
     default:
         http_response_code(404);
